@@ -10,22 +10,25 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
         />
-
+<!--   title     -->
         <q-toolbar-title>
-          Quasar App
+          <div class="absolute-center">
+            <q-icon name="more_time" />
+            打卡系統
+          </div>
         </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 
     <q-drawer
+      class="bg-primary"
       v-model="leftDrawerOpen"
       show-if-above
       bordered
     >
       <q-list>
         <q-item-label
+          class="text-white"
           header
         >
           Essential Links
