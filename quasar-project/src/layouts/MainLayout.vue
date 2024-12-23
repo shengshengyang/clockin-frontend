@@ -3,6 +3,7 @@
     <q-header elevated>
       <q-toolbar>
         <q-btn
+          v-if="isLoggedIn"
           flat
           dense
           round
@@ -10,7 +11,6 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
         />
-<!--   title     -->
         <q-toolbar-title>
           <div class="absolute-center">
             <q-icon name="more_time" />
@@ -20,25 +20,18 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      class="bg-primary"
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-if="isLoggedIn" class="bg-primary" v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label
-          class="text-white"
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
+        <q-item-label class="text-white" header> Essential Links </q-item-label>
+        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+        <q-item clickable class="text-white" @click="logout">
+          <q-item-section avatar>
+            <q-icon name="logout" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>登出</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
@@ -49,57 +42,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+import { ref } from 'vue'
+import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue'
+import { isLoggedIn, logout } from '../composables/useAuth'
 
 const linksList: EssentialLinkProps[] = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: '編輯資料',
+    icon: 'edit',
+    link: '/edit-member',
+    meta: { requiresAuth: true },
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: '地圖',
+    icon: 'map',
+    link: '/map',
+    meta: { requiresAuth: true },
   },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-];
+]
+const leftDrawerOpen = ref(false)
 
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>
