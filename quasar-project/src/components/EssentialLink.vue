@@ -20,9 +20,12 @@ export interface EssentialLinkProps {
   meta?: Record<string, unknown>
 }
 
-withDefaults(defineProps<EssentialLinkProps>(), {
+const props = withDefaults(defineProps<EssentialLinkProps>(), {
   caption: '',
   link: '#',
   icon: '',
 })
+
+console.log('Navigating to:', props.link);
+
 </script>

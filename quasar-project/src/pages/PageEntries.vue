@@ -17,17 +17,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router' // 导入 useRouter
 import { login } from '../composables/useAuth'
 
 const username = ref('')
 const password = ref('')
+const router = useRouter()
 
 const handleLogin = () => {
   if (username.value && password.value) {
-    alert(`已登入為 ${username.value}`)
-    username.value = ''
-    password.value = ''
-    login()
+    login(router, username.value, password.value)//router 一起傳才會跳轉
   } else {
     alert('請輸入用戶名和密碼')
   }

@@ -6,8 +6,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/PageEntries.vue') },
-      { path: 'edit-member', component: () => import('pages/PageEditMember.vue') },
-      { path: 'map', component: () => import('pages/PageMap.vue') },
+      { path: 'edit-member', component: () => import('pages/PageEditMember.vue'),meta: { requiresAuth: true }  },
+      { path: 'map', component: () => import('pages/PageMap.vue'),meta: { requiresAuth: true } },
     ]
   },
 
