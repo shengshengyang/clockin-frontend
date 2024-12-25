@@ -7,7 +7,14 @@
 
       <q-card-section>
         <q-input v-model="username" label="用戶名" filled dense />
-        <q-input v-model="password" type="password" label="密碼" filled dense class="q-mt-md" />
+        <q-input
+          v-model="password"
+          type="password"
+          label="密碼"
+          filled
+          dense
+          class="q-mt-md"
+        />
         <q-btn @click="handleLogin" label="登入" color="primary" class="q-mt-md full-width" />
         <q-btn flat @click="forgotPassword" label="忘記密碼" color="secondary" class="q-mt-md full-width" />
       </q-card-section>
@@ -17,16 +24,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router' // 导入 useRouter
-import { login } from '../composables/useAuth'
+import { useRouter } from 'vue-router'
+import { login } from 'src/composables/useAuth'
 
 const username = ref('')
 const password = ref('')
 const router = useRouter()
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (username.value && password.value) {
-    login(router, username.value, password.value)//router 一起傳才會跳轉
+    await login(router, username.value, password.value)
   } else {
     alert('請輸入用戶名和密碼')
   }
@@ -36,23 +43,3 @@ const forgotPassword = () => {
   alert('請聯繫管理員重置密碼')
 }
 </script>
-
-<style scoped>
-.q-pa-md {
-  padding: 16px;
-}
-
-.flex {
-  display: flex;
-}
-
-.flex-center {
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.full-width {
-  width: 100%;
-}
-</style>
