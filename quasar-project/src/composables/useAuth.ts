@@ -19,7 +19,7 @@ const login = async (router: Router, username: string, password: string) => {
     const response = await fetch('http://localhost:8081/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
     })
 
     // 2. 若狀態碼非 2xx，丟出錯誤
@@ -71,28 +71,16 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
-    ...(options.headers || {})
+    ...(options.headers || {}),
   }
 
   const finalOptions: RequestInit = {
     ...options,
-    headers
+    headers,
+    credentials: 'include', // 如果需要攜帶憑證，如 cookies
   }
 
-  const response = await fetch(url, finalOptions)
-
-  // 若 Token 已過期或無效，可能回傳 401，可在此處理
-  if (response.status === 401) {
-    // 例如自動登出或跳轉
-    // logout(...) 或提示用戶重新登入
-  }
-
-  return response
+  return fetch(url, finalOptions)
 }
 
-export {
-  isLoggedIn,
-  login,
-  logout,
-  authenticatedFetch
-}
+export { isLoggedIn, login, logout, authenticatedFetch }
