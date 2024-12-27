@@ -2,7 +2,8 @@
 
 import { ref } from 'vue'
 import type { Router } from 'vue-router'
-
+import type { AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 /**
  * 以 ref 變數記錄當前使用者是否已登入 (用於 UI 呈現)
  * 若你想只依照 localStorage 裡是否有 token 來判斷，也可以在組件內檢查。
@@ -61,7 +62,7 @@ const logout = async (router: Router) => {
  * 此函式幫忙帶上 JWT Token 的 Header，
  * 供打卡 / 其他需認證的 API 使用。
  */
-const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
+const authenticatedFetch = async (url: string, options: AxiosRequestConfig = {}) => {
   const token = localStorage.getItem('token')
   if (!token) {
     throw new Error('尚未登入或 Token 不存在')
@@ -74,13 +75,13 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
     ...(options.headers || {}),
   }
 
-  const finalOptions: RequestInit = {
+  const finalOptions: AxiosRequestConfig = {
     ...options,
     headers,
-    credentials: 'include', // 如果需要攜帶憑證，如 cookies
+    withCredentials: true, // 如果需要攜帶憑證，如 cookies
   }
 
-  return fetch(url, finalOptions)
+  return axios(url, finalOptions)
 }
 
 export { isLoggedIn, login, logout, authenticatedFetch }

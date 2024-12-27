@@ -1,26 +1,29 @@
 import { authenticatedFetch } from 'src/composables/useAuth'
 
 export async function clockInRequest(locationPayload: { lat: number; lng: number }) {
-  const response = await authenticatedFetch('http://localhost:8081/api/clock-in', {
-    method: 'POST',
-    body: JSON.stringify({
-      latitude: locationPayload.lat,
-      longitude: locationPayload.lng,
-    }),
-  })
-  if (!response.ok) {
+  try {
+    const response = await authenticatedFetch('http://localhost:8081/api/clock-in', {
+      method: 'POST',
+      data: {
+        latitude: locationPayload.lat,
+        longitude: locationPayload.lng,
+      },
+    })
+    return response.data || []
+  } catch (err) {
+    console.error('Fetch Error:', err)
     throw new Error('打卡失敗，請確認 Token 或伺服器狀態')
   }
-  return await response.text() // e.g. "打卡成功" / "遲到" 等
 }
 
 export async function fetchAttendanceRecords() {
-  const response = await authenticatedFetch('http://localhost:8081/api/records', {
-    method: 'GET',
-  })
-  if (!response.ok) {
-    throw new Error('無法取得打卡紀錄')
+  try {
+    const response = await authenticatedFetch('http://localhost:8081/api/records', {
+      method: 'GET',
+    })
+    return response.data || []
+  } catch (err) {
+    console.error('Fetch Error:', err)
+    return []
   }
-  const data = await response.json()
-  return data.data || []
 }

@@ -13,11 +13,39 @@ export default function usePageMap() {
 
   // 表格欄位
   const columns = [
-    { name: 'id', label: 'ID', field: 'id' },
-    { name: 'username', label: '使用者', field: 'username' },
-    { name: 'clockInTime', label: '打卡時間', field: 'clockInTime' },
-    { name: 'status', label: '狀態', field: 'status' },
+    { name: 'username', label: '使用者', field: 'username', align: 'center' as const },
+    {
+      name: 'clockInDate',
+      label: '日期',
+      field: 'clockInTime',
+      sortable: true,
+      align: 'center' as const,
+      format: (val: string) => {
+        const date = new Date(val)
+        return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      },
+    },
+    {
+      name: 'clockInTime',
+      label: '打卡時間',
+      field: 'clockInTime',
+      sortable: true,
+      align: 'center' as const,
+      format: (val: string) => {
+        const date = new Date(val)
+        const minutes = date.getMinutes().toString().padStart(2, '0')
+        return `${date.getHours()}:${minutes}`
+      },
+    },
+    { name: 'status', label: '狀態', field: 'status', align: 'center' as const },
   ]
+
+  interface AttendanceResponse {
+    total: number
+    data: AttendanceRecord[]
+    records: number
+    page: number
+  }
 
   interface AttendanceRecord {
     id: number
@@ -26,7 +54,7 @@ export default function usePageMap() {
     status: string
   }
 
-  const attendanceRecords = ref<AttendanceRecord[]>([])
+  const attendanceRecords = ref<AttendanceResponse>()
 
   onMounted(async () => {
     if (navigator.geolocation) {
@@ -59,12 +87,8 @@ export default function usePageMap() {
       const resMessage = await clockInRequest(userLocation.value)
       $q.notify({ type: 'positive', message: '打卡成功：' + resMessage, position: 'top' })
 
-      attendanceRecords.value.push({
-        id: Date.now(),
-        username: 'current_user',
-        clockInTime: new Date().toLocaleString('zh-TW', { hour12: false }),
-        status: resMessage,
-      })
+      // 重新獲取打卡紀錄以刷新表格資料
+      attendanceRecords.value = await fetchAttendanceRecords()
     } catch (error) {
       console.error(error)
       $q.notify({

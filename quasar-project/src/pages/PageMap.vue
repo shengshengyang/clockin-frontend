@@ -12,7 +12,13 @@
 
       <q-card-section>
         <!-- 打卡紀錄表格 -->
-        <q-table :rows="attendanceRecords" :columns="columns" row-key="id" class="q-mt-md" />
+        <q-table
+          :rows="attendanceRecords?.data || []"
+          :columns="columns"
+          row-key="clockInTime"
+          class="q-mt-md"
+          :rows-per-page-options="[5, 10, 20]"
+        />
       </q-card-section>
     </q-card>
   </q-page>
