@@ -1,8 +1,10 @@
 import { authenticatedFetch } from 'src/composables/useAuth'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 export async function clockInRequest(locationPayload: { lat: number; lng: number }) {
   try {
-    const response = await authenticatedFetch('http://localhost:8081/api/clock-in', {
+    const response = await authenticatedFetch(`${API_URL}/clock-in`, {
       method: 'POST',
       data: {
         latitude: locationPayload.lat,
@@ -26,7 +28,7 @@ export async function fetchAttendanceRecords(startDate?: string, endDate?: strin
     if (endDate) {
       queryParams.set('endDate', endDate)
     }
-    const url = `http://localhost:8081/api/records?${queryParams.toString()}`
+    const url = `${API_URL}/records?${queryParams.toString()}`
     const response = await authenticatedFetch(url, {
       method: 'GET',
     })

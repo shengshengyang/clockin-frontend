@@ -4,12 +4,11 @@ import { ref } from 'vue'
 import type { Router } from 'vue-router'
 import type { AxiosRequestConfig } from 'axios'
 import axios from 'axios'
+const API_URL = import.meta.env.VITE_API_URL
 /**
- * 以 ref 變數記錄當前使用者是否已登入 (用於 UI 呈現)
- * 若你想只依照 localStorage 裡是否有 token 來判斷，也可以在組件內檢查。
+ * 初始化時根據 localStorage 中是否存在 Token 來設置 isLoggedIn 狀態。
  */
-const isLoggedIn = ref(false)
-
+const isLoggedIn = ref<boolean>(!!localStorage.getItem('token'))
 /**
  * 使用 fetch (或 axios) 將 username/password 發到後端 /api/login，
  * 若成功，就把後端回傳的 token 存到 localStorage。
@@ -17,7 +16,7 @@ const isLoggedIn = ref(false)
 const login = async (router: Router, username: string, password: string) => {
   try {
     // 1. 呼叫後端 API
-    const response = await fetch('http://localhost:8081/api/login', {
+    const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -47,15 +46,20 @@ const login = async (router: Router, username: string, password: string) => {
 }
 
 const logout = async (router: Router) => {
-  // 1. 移除 token
-  localStorage.removeItem('token')
+  try {
+    // 移除 token
+    localStorage.removeItem('token')
 
-  // 2. 重置登入狀態
-  isLoggedIn.value = false
+    // 重置登入狀態
+    isLoggedIn.value = false
 
-  // 3. 導回登入頁
-  await router.push('/')
-  console.log('Logged out and navigated to home page')
+    // 導回登入頁
+    await router.push('/')
+    console.log('Logged out and navigated to home page')
+  } catch (error) {
+    console.error(error)
+    alert('登出失敗')
+  }
 }
 
 /**
