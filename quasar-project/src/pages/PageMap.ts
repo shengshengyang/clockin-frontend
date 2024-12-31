@@ -1,17 +1,48 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import L from 'leaflet'
 import { useQuasar } from 'quasar'
 import 'leaflet/dist/leaflet.css'
 import { clockInRequest, fetchAttendanceRecords } from 'src/adaptors/clockInAdaptor'
 
+// 新增型別
+interface AttendanceRecord {
+  id: number
+  username: string
+  clockInTime: string
+  status: string
+}
+
 export default function usePageMap() {
   const $q = useQuasar()
 
-  // 使用者與公司位置
   const userLocation = ref({ lat: 0, lng: 0 })
-  const companyLocation = { lat: 0, lng: 0 }
+  // 設定公司位置
+  const companyLocation = {
+    lat: 24.16195, // 替換成實際公司緯度
+    lng: 120.651625, // 替換成實際公司經度
+  }
 
-  // 表格欄位
+  // 設定打卡範圍半徑（公尺）
+  const CHECKIN_RADIUS = 100
+
+  // 自訂圖標
+  const userIcon = L.icon({
+    iconUrl: '/icons/user-marker.png', // 放在 public/icons 下
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+  })
+
+  const companyIcon = L.icon({
+    iconUrl: '/icons/company-marker.png', // 放在 public/icons 下
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+  })
+
+  const startDate = ref('')
+  const endDate = ref('')
+
   const columns = [
     { name: 'username', label: '使用者', field: 'username', align: 'center' as const },
     {
@@ -34,61 +65,101 @@ export default function usePageMap() {
       format: (val: string) => {
         const date = new Date(val)
         const minutes = date.getMinutes().toString().padStart(2, '0')
-        return `${date.getHours()}:${minutes}`
+        const seconds = date.getSeconds().toString().padStart(2, '0')
+        return `${date.getHours()}:${minutes}:${seconds}`
       },
     },
     { name: 'status', label: '狀態', field: 'status', align: 'center' as const },
   ]
 
-  interface AttendanceResponse {
-    total: number
-    data: AttendanceRecord[]
-    records: number
-    page: number
-  }
-
-  interface AttendanceRecord {
-    id: number
-    username: string
-    clockInTime: string
-    status: string
-  }
-
-  const attendanceRecords = ref<AttendanceResponse>()
+  // 將 any 改為我們剛才定義的介面
+  const attendanceRecords = ref<AttendanceRecord[]>([])
 
   onMounted(async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         userLocation.value.lat = pos.coords.latitude
         userLocation.value.lng = pos.coords.longitude
-        companyLocation.lat = pos.coords.latitude
-        companyLocation.lng = pos.coords.longitude
 
-        // 初始化地圖
-        const map = L.map('map').setView([userLocation.value.lat, userLocation.value.lng], 15)
+        const map = L.map('map').setView([companyLocation.lat, companyLocation.lng], 15)
+
+        // 加入地圖圖層
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
-        L.marker([userLocation.value.lat, userLocation.value.lng]).bindPopup('您的位置').addTo(map)
-        L.marker([companyLocation.lat, companyLocation.lng]).bindPopup('公司位置').addTo(map)
+
+        // 使用者位置標記
+        L.marker([userLocation.value.lat, userLocation.value.lng], {
+          icon: userIcon,
+        })
+          .bindPopup('您的位置')
+          .addTo(map)
+
+        // 公司位置標記
+        L.marker([companyLocation.lat, companyLocation.lng], {
+          icon: companyIcon,
+        })
+          .bindPopup('公司位置')
+          .addTo(map)
+
+        // 畫出打卡範圍圓圈
+        L.circle([companyLocation.lat, companyLocation.lng], {
+          color: 'red',
+          fillColor: '#f03',
+          fillOpacity: 0.2,
+          radius: CHECKIN_RADIUS,
+        })
+          .bindPopup('打卡有效範圍')
+          .addTo(map)
       })
     }
+    await fetchRecordsWithFilter()
+  })
 
-    // 取得打卡紀錄
+  // 日期驗證
+  watch(startDate, (newStartDate) => {
+    if (newStartDate > endDate.value) {
+      $q.notify({
+        type: 'negative',
+        message: '開始日期不可大於結束日期',
+        position: 'top',
+      })
+      startDate.value = endDate.value
+    }
+  })
+
+  watch(endDate, (newEndDate) => {
+    if (newEndDate < startDate.value) {
+      $q.notify({
+        type: 'negative',
+        message: '結束日期不可小於開始日期',
+        position: 'top',
+      })
+      endDate.value = startDate.value
+    }
+  })
+
+  async function fetchRecordsWithFilter() {
     try {
-      attendanceRecords.value = await fetchAttendanceRecords()
+      // 後端回傳的整個物件 { page, total, records, data }
+      const start = startDate.value || '1970-01-01'
+      const end = endDate.value || '2100-12-31'
+
+      const responseData = await fetchAttendanceRecords(start, end)
+
+      // 只取出 data 陣列，給 q-table 使用
+      attendanceRecords.value = responseData.data || []
+      console.log('attendanceRecords:', attendanceRecords.value)
     } catch (error) {
       console.error(error)
       $q.notify({ type: 'negative', message: '取得打卡紀錄失敗', position: 'top' })
     }
-  })
+  }
 
-  // 打卡
   async function clockIn() {
     try {
       const resMessage = await clockInRequest(userLocation.value)
       $q.notify({ type: 'positive', message: '打卡成功：' + resMessage, position: 'top' })
-
-      // 重新獲取打卡紀錄以刷新表格資料
-      attendanceRecords.value = await fetchAttendanceRecords()
+      // 打卡後重新撈取
+      await fetchRecordsWithFilter()
     } catch (error) {
       console.error(error)
       $q.notify({
@@ -103,5 +174,8 @@ export default function usePageMap() {
     attendanceRecords,
     columns,
     clockIn,
+    startDate,
+    endDate,
+    fetchRecordsWithFilter,
   }
 }

@@ -3,19 +3,29 @@
   <q-page class="q-pa-md">
     <q-card>
       <q-card-section>
-        <!-- 地圖容器 -->
         <div id="map" style="height: 400px"></div>
 
-        <!-- 打卡按鈕 -->
         <q-btn color="primary" class="q-mt-md" label="打卡" @click="clockIn" />
+
+        <div class="row q-my-md q-col-gutter-md">
+          <!-- 開始日期 -->
+          <div class="col-12 col-sm-6">
+            <q-input v-model="startDate" label="開始日期" type="date" dense filled />
+          </div>
+          <!-- 結束日期 -->
+          <div class="col-12 col-sm-6">
+            <q-input v-model="endDate" label="結束日期" type="date" dense filled />
+          </div>
+        </div>
+
+        <q-btn color="primary" class="q-my-md" label="搜尋" @click="fetchRecordsWithFilter" />
       </q-card-section>
 
       <q-card-section>
-        <!-- 打卡紀錄表格 -->
         <q-table
-          :rows="attendanceRecords?.data || []"
+          :rows="attendanceRecords"
           :columns="columns"
-          row-key="clockInTime"
+          row-key="id"
           class="q-mt-md"
           :rows-per-page-options="[5, 10, 20]"
         />
@@ -25,8 +35,8 @@
 </template>
 
 <script setup lang="ts">
-// ...existing code...
 import usePageMap from './PageMap'
-// 呼叫組合式函式
-const { attendanceRecords, columns, clockIn } = usePageMap()
+
+const { attendanceRecords, columns, clockIn, startDate, endDate, fetchRecordsWithFilter } =
+  usePageMap()
 </script>

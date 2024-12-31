@@ -16,9 +16,17 @@ export async function clockInRequest(locationPayload: { lat: number; lng: number
   }
 }
 
-export async function fetchAttendanceRecords() {
+export async function fetchAttendanceRecords(startDate?: string, endDate?: string) {
   try {
-    const response = await authenticatedFetch('http://localhost:8081/api/records', {
+    const queryParams = new URLSearchParams()
+    if (startDate) {
+      queryParams.set('startDate', startDate)
+    }
+    if (endDate) {
+      queryParams.set('endDate', endDate)
+    }
+    const url = `http://localhost:8081/api/records?${queryParams.toString()}`
+    const response = await authenticatedFetch(url, {
       method: 'GET',
     })
     return response.data || []
