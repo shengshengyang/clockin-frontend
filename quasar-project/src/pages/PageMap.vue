@@ -5,7 +5,10 @@
       <q-card-section>
         <div id="map" style="height: 400px"></div>
 
+        <!-- 打卡按鈕 -->
         <q-btn color="primary" class="q-mt-md" label="打卡" @click="clockIn" />
+        <!-- 重新定位按鈕 -->
+        <q-btn color="secondary" class="q-mt-md q-ml-md" label="重新定位" @click="relocate" />
 
         <div class="row q-my-md q-col-gutter-md">
           <!-- 開始日期 -->
@@ -25,7 +28,7 @@
         <q-table
           :rows="attendanceRecords"
           :columns="columns"
-          row-key="id"
+          row-key="clockInTime"
           class="q-mt-md"
           :rows-per-page-options="[5, 10, 20]"
         />
@@ -37,6 +40,13 @@
 <script setup lang="ts">
 import usePageMap from './PageMap'
 
-const { attendanceRecords, columns, clockIn, startDate, endDate, fetchRecordsWithFilter } =
-  usePageMap()
+const {
+  attendanceRecords,
+  columns,
+  clockIn,
+  startDate,
+  endDate,
+  fetchRecordsWithFilter,
+  relocate,
+} = usePageMap()
 </script>

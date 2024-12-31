@@ -16,6 +16,8 @@ export default function usePageMap() {
   const $q = useQuasar()
 
   const userLocation = ref({ lat: 0, lng: 0 })
+  let map: L.Map | null = null // 將地圖設為全局可用
+  let userMarker: L.Marker | null = null // 使用者位置標記
   // 設定公司位置
   const companyLocation = {
     lat: 24.16195, // 替換成實際公司緯度
@@ -81,13 +83,14 @@ export default function usePageMap() {
         userLocation.value.lat = pos.coords.latitude
         userLocation.value.lng = pos.coords.longitude
 
-        const map = L.map('map').setView([companyLocation.lat, companyLocation.lng], 15)
+        // 初始化地圖並將其存入全域變數 map
+        map = L.map('map').setView([companyLocation.lat, companyLocation.lng], 15)
 
         // 加入地圖圖層
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 
         // 使用者位置標記
-        L.marker([userLocation.value.lat, userLocation.value.lng], {
+        userMarker = L.marker([userLocation.value.lat, userLocation.value.lng], {
           icon: userIcon,
         })
           .bindPopup('您的位置')
@@ -110,7 +113,11 @@ export default function usePageMap() {
           .bindPopup('打卡有效範圍')
           .addTo(map)
       })
+    } else {
+      console.error('Geolocation is not supported by this browser.')
+      $q.notify({ type: 'negative', message: '您的瀏覽器不支援定位功能', position: 'top' })
     }
+
     await fetchRecordsWithFilter()
   })
 
@@ -170,6 +177,48 @@ export default function usePageMap() {
     }
   }
 
+  async function relocate() {
+    if (!map) {
+      $q.notify({
+        type: 'negative',
+        message: '地圖尚未初始化，請稍後再試',
+        position: 'top',
+      })
+      return
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLocation.value.lat = pos.coords.latitude
+          userLocation.value.lng = pos.coords.longitude
+
+          // 更新使用者位置的標記
+          if (userMarker) {
+            userMarker.setLatLng([userLocation.value.lat, userLocation.value.lng])
+          } else {
+            userMarker = L.marker([userLocation.value.lat, userLocation.value.lng], {
+              icon: userIcon,
+            })
+              .bindPopup('您的位置')
+              .addTo(map!)
+          }
+
+          // 更新地圖的視角
+          map!.setView([userLocation.value.lat, userLocation.value.lng], 15)
+
+          $q.notify({ type: 'positive', message: '位置已更新', position: 'top' })
+        },
+        (err) => {
+          console.error('Geolocation error:', err)
+          $q.notify({ type: 'negative', message: '無法取得定位', position: 'top' })
+        },
+      )
+    } else {
+      $q.notify({ type: 'negative', message: '您的瀏覽器不支援定位功能', position: 'top' })
+    }
+  }
+
   return {
     attendanceRecords,
     columns,
@@ -177,5 +226,6 @@ export default function usePageMap() {
     startDate,
     endDate,
     fetchRecordsWithFilter,
+    relocate,
   }
 }

@@ -17,6 +17,7 @@ export async function clockInRequest(locationPayload: { lat: number; lng: number
 }
 
 export async function fetchAttendanceRecords(startDate?: string, endDate?: string) {
+  console.log('Fetching attendance records', { startDate, endDate })
   try {
     const queryParams = new URLSearchParams()
     if (startDate) {
@@ -29,6 +30,7 @@ export async function fetchAttendanceRecords(startDate?: string, endDate?: strin
     const response = await authenticatedFetch(url, {
       method: 'GET',
     })
+
     return response.data || []
   } catch (err) {
     console.error('Fetch Error:', err)
